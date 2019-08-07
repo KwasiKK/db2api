@@ -17,6 +17,19 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Application global variables
+    |--------------------------------------------------------------------------
+    |
+    | These values are you used by the application to.
+    |
+    */
+
+    'project_version' => "5.6.*",
+    'base_dir' => "C:\laragon\www\\",
+    'php_dir' => "C:\laragon\bin\php\php-5.6.16\php",
+
+    /*
+    |--------------------------------------------------------------------------
     | Application Environment
     |--------------------------------------------------------------------------
     |
@@ -165,6 +178,7 @@ return [
         /*
          * Package Service Providers...
          */
+        Collective\Html\HtmlServiceProvider::class,
 
         /*
          * Application Service Providers...
@@ -225,7 +239,10 @@ return [
         'URL' => Illuminate\Support\Facades\URL::class,
         'Validator' => Illuminate\Support\Facades\Validator::class,
         'View' => Illuminate\Support\Facades\View::class,
-
+        'Form' => Collective\Html\FormFacade::class,
+        'Html' => Collective\Html\HtmlFacade::class,
+        'Filesystem' => Illuminate\Filesystem\Filesystem::class,
+        'Htmldom' => Yangqi\Htmldom\Htmldom::class,
     ],
 
 ];

@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use App\Project;
+use Auth;
 
 class HomeController extends Controller
 {
@@ -23,6 +25,16 @@ class HomeController extends Controller
      */
     public function index()
     {
-        return view('home');
+        $projects = Project::join('templates', 'projects.template_id', '=', 'templates.id')
+        ->select("projects.*", "templates.screenshot_url", "templates.category")
+        ->where("projects.user_id", "=", Auth::user()->id)->get();
+        // $templates = Templates::all();
+
+        //return $projects;
+        if(count($projects) > 0){
+            return view('home', compact('projects'));
+        }else{
+            return view('create_project');
+        }
     }
 }
