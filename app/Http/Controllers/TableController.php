@@ -84,10 +84,11 @@ class TableController extends Controller
     public function show($id)
     {
 		// get one Table 
-		$Table = Table::find($id);
+		$table = Table::find($id);
 
+		//return $Table;
 		// show the view and pass the Table to it 
-		return View::make('Table.show')->with('Table', $Table);
+		return View::make('view_table')->with('table', $table);
     }
 
     /**
@@ -114,32 +115,30 @@ class TableController extends Controller
      */
     public function update(Request $request, $id)
     {
-    	return $request;
 		// validate input 
 		$rules = array(
-			'note' => 'required', 
-			'aid_holder_id' => 'required', 
-			'date' => 'required', 
+			'name' => 'required', 
+			'columns' => 'required', 
+			'project_id' => 'required', 
 		); 
-		// $validator = Validator::make(Input::all(), $rules);
+		$validator = Validator::make($request->all(), $rules);
 
-		// // process the validator
-		// if($validator->fails()){
-		// 	return Redirect::to('Table/'.$id.'/edit')
-		// 		->withErrors($validator)
-		// 		->withInput(Input::all());
-		// } else {
-			// store the data 
-			// $Table = Table::find($id); 
-			// $Table->note = Input::get('note');
-			// $Table->aid_holder_id = Input::get('aid_holder_id');
-			// $Table->date = Input::get('date');
-			// $Table->save();
+		// process the validator
+		if($validator->fails()){
+			return Response::json(array('success' => false, 'output' => json_encode($validator->errors())), 200);
+		} else {
+			$Table = Table::find($id);
+			if (!$Table)
+				return Response::json(array('success' => false, 'output' => "Table not found"), 410);
 
-			// redirect
-			// Session::flash('message', 'Successfully updated Table!');
-			// return Redirect::to('Table');
-		//}
+			$Table->name = $request->get('name');
+			$Table->columns = json_encode($request->get('columns'));
+			$Table->project_id = $request->get('project_id');
+			$Table->save();
+
+			Session::flash('message', 'Table updated.');
+			return Response::json(array('success' => true), 200);
+		}
     }
 
     /**
