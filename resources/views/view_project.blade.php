@@ -4,12 +4,20 @@
         <div class="row">
             <div class="col-lg-12">
                 <h1 class="page-header">{{ $project->name }} tables
+                    <a href="/export/laravel/{{ $project->id }}" type="button" class="btn btn-success pull-right" >
+                        <span class="glyphicon glyphicon-export"></span> Export Laravel Project
+                    </a>
                     <a href="/new_project" type="button" class="btn btn-default pull-right" >
-                        <span class="glyphicon glyphicon-plus"></span> New Project
-                    </a> 
+                        <span class="glyphicon glyphicon-plus"></span> Create New Project
+                    </a>
                 </h1>
+                @if (Session::has('message'))
+                    <div class="alert alert-success alert-dismissable">
+                        <button type='button' class='close' data-dismiss='alert' aria-hidden='true'>&times;</button>
+                        {{ Session::get('message') }}
+                    </div>
+                @endif
                 <div class="feedback">
-                    <!-- <pre>{{ print_r($project) }}</pre> -->
                 </div> 
                 <div class="output"></div>                                              
             </div>            
@@ -31,7 +39,7 @@
                                 <tbody class="create-table-rows">
                                     <tr class="field">
                                         <td><button type="button" class="btnAddFieldBefore" title="Add column before this row." >+</button></td>
-                                        <td><input type="text" class="column_name form-control" placeholder="Column Name" /></td>
+                                        <td><input type="text" class="column_name form-control" placeholder="Column Name" required /></td>
                                         <td>
                                             <select class="column_type form-control" name="field_type[0]" id="field_0_2">
                                                 <option title="A 4-byte integer, signed range is -2,147,483,648 to 2,147,483,647, unsigned range is 0 to 4,294,967,295">INT</option>
@@ -60,21 +68,27 @@
 
         <div class="row">
             <table class="table">
-               <thead>
-                   <tr>
+                <thead>
+                    <tr>
                        <th>#</th>
                        <th>Name</th>
                        <th>Column Count</th>
                        <th>Actions</th>
-                   </tr>
-               </thead>
-               <tbody>
+                    </tr>
+                </thead>
+                <tbody>
                     @foreach($tables as $key => $table)
                        <tr>
-                           <td>{{ $key }}</td>
-                           <td>{{ $table->name }}</td>
-                           <td>{{ count(json_decode($table->columns)) }}</td>
-                           <td><a href="/table/{{ $table->id }}" class="btn">View</a></td>
+                            <td>{{ $key + 1 }}</td>
+                            <td>{{ $table->name }}</td>
+                            <td>{{ count(json_decode($table->columns)) }}</td>
+                            <td>
+                                <a href="/table/{{ $table->id }}" class="btn btn-default btn-xs">View</a>
+                                {!! Form::open(array('url' => 'table/' . $table->id, 'class' => 'btn table-btn')) !!}
+                                    {!! Form::hidden('_method', 'DELETE') !!}
+                                    {!! Form::submit('Delete', array('class' => 'btn btn-xs btn-warning')) !!}
+                                {!! Form::close() !!}
+                            </td>
                        </tr>
                     @endforeach
                </tbody> 

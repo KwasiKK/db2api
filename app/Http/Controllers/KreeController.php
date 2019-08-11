@@ -10,13 +10,16 @@
 namespace App\Http\Controllers;
 
 use App\Http\Controllers\Controller;
-use App\Projects;
-use App\Templates;
+use App\Template;
 use Filesystem;
 use Response;
+use Redirect;
 use DB;
 use Auth;
+use Session;
 use Request;
+use App\Table;
+use App\Project;
 
 class KreeController extends Controller
 {
@@ -53,6 +56,37 @@ class KreeController extends Controller
 
         return view('dashboard.auto_crud', compact('projects', 'db_list'));
     }
+
+    /**
+     * Display a listing of the resource.
+     *
+     * @return Response
+     */
+    public function export_laravel($id)
+    {
+        // $databases = DB::connection("mysql")->select("SHOW DATABASES");
+        // $db_list = [];
+        // $i = 0;
+        // foreach ($databases as $key => $database) {
+        //     $db_list[$database->{"Database"}] = $database->{"Database"};
+        //     $i++;
+        // }
+
+        // $projects = scandir($this->base_dir);
+        $project = Project::join('templates', 'projects.template_id', '=', 'templates.id')
+        ->select("projects.*", "templates.screenshot_url", "templates.category")
+        ->where("projects.user_id", "=", Auth::user()->id)
+        ->where("projects.id", "=", $id)->first();
+        $tables = Table::where("project_id", "=", $id)->get();
+
+        if (count($tables) == 0) {
+            Session::flash('message', 'Please add tables to your project before exporting it.');
+            return Redirect::to('project/view/' . $project->id);
+        }
+
+        return view('export_laravel', compact('project', 'tables'));
+    }
+
     /**
      * Run the kree algorithm according to inputs.
      *
@@ -60,7 +94,7 @@ class KreeController extends Controller
      */
     public function new_project()
     {
-        $templates = Templates::all();
+        $templates = Template::all();
         return view('create_project', compact('templates'));
     }
 
@@ -73,7 +107,7 @@ class KreeController extends Controller
     {
         $input = Request::all();
         return $input;
-        $templates = Templates::all();
+        $templates = Template::all();
         return view('dashboard.new_build', compact('templates', 'input'));
     }
 

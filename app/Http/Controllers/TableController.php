@@ -62,6 +62,11 @@ class TableController extends Controller
 		if($validator->fails()){
 			return Response::json(array('success' => false, 'output' => json_encode($validator->errors())), 200);
 		} else {
+			$existing = Table::where(array("name" => $request->get('name'), "project_id" => $request->get('project_id')))->get();
+			
+			if (count($existing) > 0)
+				return Response::json(array('success' => false, 'output' => "Error: table already exists."), 200);
+
 			// store the data 
 			$Table = new Table; 
 			$Table->name = $request->get('name');
@@ -155,7 +160,7 @@ class TableController extends Controller
 		$Table->delete();
 
 		// redirect
-		Session::flash('message', 'Successfully deleted the Table!');
-		return Redirect::to('Table');
+		Session::flash('message', 'Successfully deleted the table!');
+		return Redirect::to('project/view/' . $Table->project_id);
     }
 }

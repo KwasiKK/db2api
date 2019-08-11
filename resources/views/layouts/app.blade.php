@@ -32,8 +32,8 @@
     <link rel="stylesheet" href="/css/font-awesome.min.css">
 
     <!-- Custom stlylesheet -->
-    <link type="text/css" rel="stylesheet" href="/css/main.css" />
     <link type="text/css" rel="stylesheet" href="/css/style.css" />
+    <link type="text/css" rel="stylesheet" href="/css/main.css" />
     <!-- HTML5 shim and Respond.js for IE8 support of HTML5 elements and media queries -->
     <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
     <!--[if lt IE 9]>
@@ -84,7 +84,15 @@
                         <li><a href="{{ route('login') }}">{{ __('Login') }}</a></li>
                         <li><a href="{{ route('register') }}">{{ __('Register') }}</a></li>
                     @else
-                        <li><a href="/home">Projects</a></li>
+                        <li class="has-dropdown"><a href="/home">Projects</a>
+                            <ul class="dropdown">
+                                <li>
+                                    <a class="dropdown-item" href="/new_project">
+                                        New Project
+                                    </a>
+                                </li>
+                            </ul>
+                        </li>
                         <li class="has-dropdown"><a href="#">{{ Auth::user()->name }}</a>
                             <ul class="dropdown">
                                 <li>

@@ -8,6 +8,13 @@
                         <span class="glyphicon glyphicon-plus"></span> New Project
                     </a> 
                 </h1>
+                <!-- will be used to show any messages -->
+                @if (Session::has('message'))
+                    <div class="alert alert-success alert-dismissable">
+                        <button type='button' class='close' data-dismiss='alert' aria-hidden='true'>&times;</button>
+                        {{ Session::get('message') }}
+                    </div>
+                @endif
                 <div class="feedback"></div> 
                 <div class="output"></div>                                              
             </div>            
@@ -19,17 +26,29 @@
                    <tr>
                        <th>#</th>
                        <th>Name</th>
-                       <th>Table Count</th>
+                       <!-- <th>Table Count</th> -->
                        <th>Actions</th>
+                       <th>Export</th>
                    </tr>
                </thead>
                <tbody>
                     @foreach($projects as $key => $project)
                        <tr>
-                           <td>{{ $key }}</td>
-                           <td>{{ $project->name }}</td>
-                           <td>0</td>
-                           <td><a href="/project/view/{{ $project->id }}" class="btn">View</a></td>
+                            <td>{{ $key + 1 }}</td>
+                            <td>{{ $project->name }}</td>
+                            <!-- <td>{{ count($project->name) }}</td> -->
+                            <td>
+                                <a href="/project/view/{{ $project->id }}" class="btn btn-default btn-xs">View</a>
+                                {!! Form::open(array('url' => 'project/' . $project->id, 'class' => 'btn table-btn')) !!}
+                                    {!! Form::hidden('_method', 'DELETE') !!}
+                                    {!! Form::submit('Delete', array('class' => 'btn btn-xs btn-warning')) !!}
+                                {!! Form::close() !!}
+                            </td>
+                            <td>
+                                <a href="/export/laravel/{{ $project->id }}" type="button" class="btn btn-success btn-xs" >
+                                    <span class="glyphicon glyphicon-plus"></span> Export Laravel Project
+                                </a>
+                            </td>
                        </tr>
                     @endforeach
                </tbody> 
@@ -50,21 +69,5 @@
 
 <script type="text/javascript">
 
-$(".btnShow").on("click", function (e) {
-    e.preventDefault();
-    $(".currentProjectInput").val($(this).attr("data-name"));
-    $(".currentProjectIdInput").val($(this).attr("data-id"));
-
-    $(".feedback").html(`<div class='alert alert-info alert-dismissable'>
-            <button type='button' class='close' data-dismiss='alert' aria-hidden='true'>&times;</button>
-            Making your project editable. Please wait...
-        </div>`);
-
-    $(".lastSlide").slideDown(666);
-
-    $("#frmTemplateBuilder").trigger("submit");
-});
-
 </script>
-
 @stop

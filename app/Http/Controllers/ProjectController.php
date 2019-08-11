@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use DB;
 use Auth;
 use Request;
+use Session;
+use Redirect;
 use Response;
 use App\Table;
 use Filesystem;
@@ -123,6 +125,21 @@ class ProjectController extends Controller
      */
     public function destroy($id)
     {
-        //
+        // delete one project 
+        $Project = Project::find($id);
+
+        if ($Project) {
+            $Project->delete();
+
+            // delete related tables
+            $tables = Table::where(array('project_id' => $id))->get();
+            for ($i=0; $i < count($tables); $i++) { 
+                $tables[$i]->delete();
+            }
+        }
+
+        // redirect
+        Session::flash('message', 'Successfully deleted the project and related tables!');
+        return Redirect::to('home');
     }
 }

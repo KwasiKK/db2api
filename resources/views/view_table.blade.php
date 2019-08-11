@@ -8,6 +8,13 @@
                         <span class="glyphicon glyphicon-plus"></span> New Table
                     </a> 
                 </h1>
+                <!-- will be used to show any messages -->
+                @if (Session::has('message'))
+                    <div class="alert alert-info alert-dismissable">
+                        <button type='button' class='close' data-dismiss='alert' aria-hidden='true'>&times;</button>
+                        {{ Session::get('message') }}
+                    </div>
+                @endif
                 <div class="feedback">
                     <!-- <pre>{{ print_r($table) }}</pre> -->
                 </div> 
