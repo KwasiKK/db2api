@@ -28,7 +28,7 @@
 			<div class="tables">
 				@foreach($tables as $key => $table)
 					<div class="form-group">
-			            <input type="checkbox" name="table-checkbox-default" id="table-checkbox-default-{{ $table->id }}" autocomplete="off" checked />
+			            <input type="checkbox" name="table-checkbox-default" id="table-checkbox-default-{{ $table->id }}" autocomplete="off" checked value="{{ $table->id }}" />
 			            <div class="btn-group">
 			                <label for="table-checkbox-default-{{ $table->id }}" class="btn btn-default">
 			                    <span class="glyphicon glyphicon-ok"></span>
@@ -48,7 +48,7 @@
 				@php ( $features = array("routes", "migrations", "models", "controllers", "views", "dependencies", "authentication") )
 				@foreach($features as $key => $feature)
 					<div class="form-group">
-			            <input type="checkbox" name="feature-checkbox-success" id="feature-checkbox-success-{{ $feature }}" autocomplete="off" checked />
+			            <input type="checkbox" name="feature-checkbox-success" id="feature-checkbox-success-{{ $feature }}" autocomplete="off" checked value="{{ $feature }}" />
 			            <div class="btn-group">
 			                <label for="feature-checkbox-success-{{ $feature }}" class="btn btn-success">
 			                    <span class="glyphicon glyphicon-ok"></span>
@@ -63,9 +63,16 @@
 			</div>
 	    </div>
 		<div class="row final-step">
-			<button class="main-btn "><span class="glyphicon glyphicon-export"></span> Export Project</button>
+			<button type="button" class="main-btn btn-export"><span class="glyphicon glyphicon-export"></span> Export Project</button>
+			<div class="loading-block">
+				<div class="alert alert-success alert-dismissable">
+	                The project files are being created, this can take several minutes. Please wait...
+	            </div>
+	            <img src="/img/loading.gif" class="loading-img">
+			</div>
 		</div>
     </div>
+    <input type="hidden" class="project_id" value="{{ $project->id }}">
 @stop
 
 @section('scripts')

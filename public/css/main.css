@@ -34,3 +34,12 @@
     text-align: center;
     margin-bottom: 80px;
 }
+
+.loading-block {
+    display: none;
+    margin: 20px;
+}
+
+.loading-block .loading-img {
+    width: 350px;
+}

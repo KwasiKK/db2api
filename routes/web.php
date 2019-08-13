@@ -32,6 +32,7 @@ Route::post('create_project_in_db', 'ProjectController@create_project_in_db');
 
 Route::get('project/view/{id}', 'ProjectController@view_project');
 Route::get('export/laravel/{id}', 'KreeController@export_laravel');
+Route::post('export/laravel/{id}', 'KreeController@export_laravel_post');
 
 Route::resource('project', 'ProjectController');
 Route::resource('table', 'TableController');

@@ -17,9 +17,9 @@ use Redirect;
 use DB;
 use Auth;
 use Session;
-use Request;
 use App\Table;
 use App\Project;
+use Illuminate\Http\Request;
 
 class KreeController extends Controller
 {
@@ -29,11 +29,13 @@ class KreeController extends Controller
     public $ref_relationships = array();
     public $output;
     protected $editor;
-    public $project_version = "5.6.*";
-    public $base_dir = "C:\laragon\www\\";
-    public $php_dir = "C:\laragon\bin\php\php-5.6.16\php";
+    public $project_version = "5.8.*";
+    public $base_dir;
+    public $php_dir;
 
     public function __construct() {
+        $this->base_dir = env("BASE_DIR", "C:\laragon\www\\");
+        $this->php_dir = env("PHP_DIR", "C:\laragon\bin\php\php-7.1.7-Win32-VC14-x64\php");
         $this->editor = new Filesystem();
     }
 
@@ -64,15 +66,6 @@ class KreeController extends Controller
      */
     public function export_laravel($id)
     {
-        // $databases = DB::connection("mysql")->select("SHOW DATABASES");
-        // $db_list = [];
-        // $i = 0;
-        // foreach ($databases as $key => $database) {
-        //     $db_list[$database->{"Database"}] = $database->{"Database"};
-        //     $i++;
-        // }
-
-        // $projects = scandir($this->base_dir);
         $project = Project::join('templates', 'projects.template_id', '=', 'templates.id')
         ->select("projects.*", "templates.screenshot_url", "templates.category")
         ->where("projects.user_id", "=", Auth::user()->id)
@@ -85,6 +78,62 @@ class KreeController extends Controller
         }
 
         return view('export_laravel', compact('project', 'tables'));
+    }
+
+    /**
+     * Run the kree algorithm according to inputs.
+     *
+     * @return Response
+     */
+    public function export_laravel_post(Request $request, $id)
+    {
+        set_time_limit(0);
+
+        $this->output = array();
+
+        $output = array();
+
+        //$this->db_name = $input["database"];
+
+        //$db_data = $this->get_db_data();
+
+        $project = Project::join('templates', 'projects.template_id', '=', 'templates.id')
+        ->select("projects.*", "templates.screenshot_url", "templates.category")
+        ->where("projects.user_id", "=", Auth::user()->id)
+        ->where("projects.id", "=", $id)->first();
+
+        // Create project files
+        $path = $this->base_dir.env("PROJECT_NAME", "krie")."\\storage\\originals\\original-5.8.17";
+        $target =  $this->base_dir.$project->name;
+        $this->editor->copyDirectory($path, $target);
+
+        $this->project_name = $project->name;
+        $this->tables = [];
+        for ($i=0; $i < count($request->get("tables")); $i++) { 
+            $this->tables[$i] = Table::find($request->get("tables")[$i]);
+        }
+
+        if (in_array("migrations", $request->get("features"))) {
+            $this->create_migrations();
+        }
+        if (in_array("models", $request->get("features"))) {
+            $this->create_models();
+        }
+        if (in_array("controllers", $request->get("features"))) {
+            $this->create_controllers();
+        }
+        if (in_array("views", $request->get("features"))) {
+            $this->create_views();
+        }
+        if (in_array("routes", $request->get("features"))) {
+            $this->create_routes();
+        }
+        if (in_array("authentication", $request->get("features"))) {
+            $this->create_auth();
+        }
+        //$this->create_dependencies();
+
+        return $this->output;
     }
 
     /**
@@ -126,7 +175,7 @@ class KreeController extends Controller
 
         $this->db_name = $input["database"];
 
-        $db_data = $this->get_db_data($this->db_name);
+        $db_data = $this->get_db_data();
 
         $base_dir = $this->base_dir;
 
@@ -207,22 +256,24 @@ class KreeController extends Controller
      *
      * @return Response
      */
-    public function get_db_data($db_name)
+    public function get_db_data()
     {
-       $tables = DB::connection("mysql2")->select("SHOW TABLES from ".$db_name."");
+        //$tables = DB::connection("mysql2")->select("SHOW TABLES from ".$db_name."");
         $data = array();
         $i = 0;
+
         //For Each table in the selected db
-        foreach ($tables as $key => $table) {
+        foreach ($this->tables as $key => $table) {
             //Select table attributes and comments
-            $columns = DB::connection("mysql2")->select("SHOW COLUMNS FROM ".$table->{"Tables_in_".$db_name}." FROM ".$db_name);
+            $columns = $table["columns"];//DB::connection("mysql2")->select("SHOW COLUMNS FROM ".$table->{"Tables_in_".$db_name}." FROM ".$db_name);
 
             //This section select the Foreign key details for $table
-            $fk_details = DB::connection("mysql2")->
-            select("SELECT * FROM INFORMATION_SCHEMA.KEY_COLUMN_USAGE
-            WHERE REFERENCED_TABLE_SCHEMA = '".$db_name."' AND REFERENCED_TABLE_NAME = '".$table->{"Tables_in_".$db_name}."'");            
+            $fk_details = [];
+            // DB::connection("mysql2")->
+            // select("SELECT * FROM INFORMATION_SCHEMA.KEY_COLUMN_USAGE
+            // WHERE REFERENCED_TABLE_SCHEMA = '".$db_name."' AND REFERENCED_TABLE_NAME = '".$table->{"Tables_in_".$db_name}."'");            
 
-            $data[$i]['name'] = $table->{"Tables_in_".$db_name};
+            $data[$i]['name'] = $table->{"Tables_in_".$this->project_name};
             $data[$i]['columns'] = $columns;
             $data[$i]['fk_details'] = $fk_details;
 
@@ -432,7 +483,7 @@ class KreeController extends Controller
      *
      * @return Response
      */
-    public function edit_dependencies($request){
+    public function edit_dependencies(){
         /**
          *  write to config/app.php and add html and form builder
         */ 
@@ -442,11 +493,10 @@ class KreeController extends Controller
         ];        
 
         $update_request = array(
-            'file_url' => $this->base_dir.$this->project_name."\app\Http\Controllers\\".$request['filename'],
-            'function_name' => "index",
+            'file_url' => $this->base_dir.$this->project_name."\config\app.php",
+            'array_name' => "aliases",
             'new_content' => $new_content,
-            'update_type' => "replace",
-            'table' => $table
+            'update_type' => "append",
         );                
 
         $this->editor->update_array($update_request);
@@ -465,9 +515,9 @@ class KreeController extends Controller
      */
     public function create_routes()
     {
-        $file_dir = $this->base_dir.$this->project_name."\\app\\Http\\";
+        $file_dir = $this->base_dir.$this->project_name."\\routes\\";
 
-        $filename = "routes.php";
+        $filename = "web.php";
         
         $result = $this->editor->exists($file_dir.$filename);
         if(!$result){ //if file does not exist, create it
@@ -499,7 +549,7 @@ class KreeController extends Controller
              *  editing route file to include current table as a resource
             */               
 
-            $this->edit_route(array('table' => $this->tables[$i], 'file_url' => $file_dir.$filename));
+            $this->edit_route(array('table' => $this->tables[$i]->name, 'file_url' => $file_dir.$filename));
         }  
 
         $this->edit_route(array('table' => "Last", 'file_url' => $file_dir."routes.php"));
@@ -512,7 +562,7 @@ class KreeController extends Controller
      */
     public function edit_route($request)
     {
-        $data = $this->get_db_data($this->db_name);
+        $data = $this->get_db_data();
         //array_push($this->output, "<pre>";
         //print_r($data);
         //array_push($this->output, "</pre>";
@@ -578,22 +628,22 @@ class KreeController extends Controller
 
         for ($i=0; $i < count($this->tables); $i++) {
             //creating model for table via php artisan make:model command
-            $result = file_exists($file_dir.$this->tables[$i]);
+            $result = file_exists($file_dir.$this->tables[$i]->name);
             
             if(!$result){ //if dir does not exist, create it
-                array_push($this->output, "*Creating View Directory for ".$this->tables[$i].": ".$file_dir.$this->tables[$i]);
-                $this->editor->makeDirectory($file_dir.$this->tables[$i]);
+                array_push($this->output, "*Creating View Directory for ".$this->tables[$i]->name.": ".$file_dir.$this->tables[$i]->name);
+                $this->editor->makeDirectory($file_dir.$this->tables[$i]->name);
             }else{
-                if (!$this->editor->deleteDirectory($file_dir.$this->tables[$i]))
+                if (!$this->editor->deleteDirectory($file_dir.$this->tables[$i]->name))
                 {
                     array_push($this->output, "Error deleting: ".$file_dir);
                     return;
                 }
                 else
                 {
-                    array_push($this->output, "+Creating View Directory for ".$this->tables[$i]);
-                    $this->editor->makeDirectory($file_dir.$this->tables[$i]);
-                }         
+                    array_push($this->output, "+Creating View Directory for ".$this->tables[$i]->name);
+                    $this->editor->makeDirectory($file_dir.$this->tables[$i]->name);
+                }
             }
 
             array_push($this->output, "Directory Created: ".$file_dir);
@@ -619,12 +669,12 @@ class KreeController extends Controller
          *  create main view, which may include Main file called app.blade.php that has bootstraped Header and Footer
         */      
 
-        // $file_dir = $this->base_dir.$this->project_name."\\resources\\views\\";
+        $file_dir = $this->base_dir.$this->project_name."\\resources\\views\\";
         
-        // $filename = "app.blade.php";
-        // array_push($this->output, $this->editor->createReplaceFile(array("file" => $file_dir.$filename)));
+        $filename = "app.blade.php";
+        array_push($this->output, $this->editor->createReplaceFile(array("file" => $file_dir.$filename)));
         
-        // $this->edit_view(array('table' => "app.blade.php"));
+        $this->edit_view(array('table' => "app.blade.php"));
 
         /**
          *  create error handling partial view
@@ -639,7 +689,7 @@ class KreeController extends Controller
         */                      
 
         for ($i=0; $i < count($this->tables); $i++) {
-            $file_dir = $this->base_dir.$this->project_name."\\resources\\views\\".$this->tables[$i]."\\";
+            $file_dir = $this->base_dir.$this->project_name."\\resources\\views\\".$this->tables[$i]->name."\\";
             
             /**
              *  creating index view , which may include CRUD navigation
@@ -678,7 +728,7 @@ class KreeController extends Controller
             array_push($this->output, $this->editor->createReplaceFile(array("file" => $file_dir.$filename)));
 
             //Edit View
-            $this->edit_view(array('table' => $this->tables[$i]));
+            $this->edit_view(array('table' => $this->tables[$i]->name));
 
             //break;
         }               
@@ -691,7 +741,7 @@ class KreeController extends Controller
      */
     public function edit_view($request)
     {
-        $data = $this->get_db_data($this->db_name);
+        $data = $this->get_db_data();
         //array_push($this->output, "<pre>";
         //print_r($data);
         //array_push($this->output, "</pre>";
@@ -834,26 +884,26 @@ class KreeController extends Controller
         $file_dir = $this->base_dir.$this->project_name."\app\\Http\\Controllers\\";
 
         for ($i=0; $i < count($this->tables); $i++) {
-            $result = $this->editor->exists($file_dir.$this->tables[$i]."Controller.php");
-            $filename = $this->tables[$i]."Controller.php";
+            $result = $this->editor->exists($file_dir.$this->tables[$i]->name."Controller.php");
+            $filename = $this->tables[$i]->name."Controller.php";
 
             if(!$result){ //if controller does not exist, create it
-                array_push($this->output, "*Creating Controller for ".$this->tables[$i]);
-                $this->editor->make_command(array('base_dir' => $this->base_dir, 'php_dir' => $this->php_dir, 'project_name' => $this->project_name, 'type' => "controller", 'table' => $this->tables[$i]));
+                array_push($this->output, "*Creating Controller for ".$this->tables[$i]->name);
+                $this->editor->make_command(array('base_dir' => $this->base_dir, 'php_dir' => $this->php_dir, 'project_name' => $this->project_name, 'type' => "controller", 'table' => $this->tables[$i]->name));
             }else{
                 if (!unlink($file_dir.$filename))
                 {
                     array_push($this->output, "Error deleting: ".$filename);
                     return;
                 }
-                array_push($this->output, "*Creating Controller for ".$this->tables[$i]);
-                $this->editor->make_command(array('base_dir' => $this->base_dir, 'php_dir' => $this->php_dir, 'project_name' => $this->project_name, 'type' => "controller", 'table' => $this->tables[$i]));                                                    
+                array_push($this->output, "*Creating Controller for ".$this->tables[$i]->name);
+                $this->editor->make_command(array('base_dir' => $this->base_dir, 'php_dir' => $this->php_dir, 'project_name' => $this->project_name, 'type' => "controller", 'table' => $this->tables[$i]->name));                                                    
             }
 
             array_push($this->output, "File Created: ".$filename);
 
             //Loops through each table column and insert it into migration
-            $this->edit_controller(array('table' => $this->tables[$i], 'filename' => $filename));
+            $this->edit_controller(array('table' => $this->tables[$i]->name, 'filename' => $filename));
         }        
     }
 
@@ -864,7 +914,7 @@ class KreeController extends Controller
      */
     public function edit_controller($request)
     {
-        $data = $this->get_db_data($this->db_name);
+        $data = $this->get_db_data();
 
         for ($i=0; $i < count($data); $i++) {
             if($data[$i]["name"] == $request['table']){        
@@ -1016,11 +1066,11 @@ class KreeController extends Controller
 
         for ($i=0; $i < count($this->tables); $i++) {
             //creating model for table via php artisan make:model command
-            $result = $this->editor->exists($file_dir.$this->tables[$i].".php");
-            $filename = $this->tables[$i].".php";
+            $result = $this->editor->exists($file_dir.$this->tables[$i]->name.".php");
+            $filename = $this->tables[$i]->name.".php";
             if(!$result){ //if model does not exist, create it
-                array_push($this->output, "Creating Model for ".$this->tables[$i]);
-                $this->editor->make_command(array('base_dir' => $this->base_dir, 'php_dir' => $this->php_dir, 'project_name' => $this->project_name, 'type' => "model", 'table' => $this->tables[$i]));
+                array_push($this->output, "Creating Model for ".$this->tables[$i]->name);
+                $this->editor->make_command(array('base_dir' => $this->base_dir, 'php_dir' => $this->php_dir, 'project_name' => $this->project_name, 'type' => "model", 'table' => $this->tables[$i]->name));
             }else{
                 if (!unlink($file_dir.$filename))
                 {
@@ -1029,15 +1079,15 @@ class KreeController extends Controller
                 }
                 else
                 {
-                    array_push($this->output, "Creating Model for ".$this->tables[$i]);
-                    $this->editor->make_command(array('base_dir' => $this->base_dir, 'php_dir' => $this->php_dir, 'project_name' => $this->project_name, 'type' => "model", 'table' => $this->tables[$i]));                                    
+                    array_push($this->output, "Creating Model for ".$this->tables[$i]->name);
+                    $this->editor->make_command(array('base_dir' => $this->base_dir, 'php_dir' => $this->php_dir, 'project_name' => $this->project_name, 'type' => "model", 'table' => $this->tables[$i]->name));                                    
                 }                 
             }
 
             array_push($this->output, "File Created: ".$filename);
 
             //Loops through each table column and insert it into migration
-            $this->edit_model(array('table' => $this->tables[$i], 'filename' => $filename));
+            $this->edit_model(array('table' => $this->tables[$i]->name, 'filename' => $filename));
         }
     }
 
@@ -1048,7 +1098,7 @@ class KreeController extends Controller
      */
     public function edit_model($request)
     {
-        $data = $this->get_db_data($this->db_name);
+        $data = $this->get_db_data();
 
         //print_r($data);
 
@@ -1132,11 +1182,11 @@ class KreeController extends Controller
         $file_dir = $this->base_dir.$this->project_name."\database\migrations\\";
         for ($i=0; $i < count($this->tables); $i++) {
             //creating migration for table via php artisan make:migration command
-            $result = $this->editor->exists($file_dir."_".$this->tables[$i]."_table.php");
+            $result = $this->editor->exists($file_dir."_".$this->tables[$i]->name."_table.php");
             $filename = $result["filename"];
             if(!$result){ //if migration does not exist, create it
-                array_push($this->output, "1. Creating migration for ".$this->tables[$i]);
-                $output = $this->editor->make_command(array('base_dir' => $this->base_dir, 'php_dir' => $this->php_dir, 'project_name' => $this->project_name, 'type' => "migration", 'table' => $this->tables[$i]));
+                array_push($this->output, "1. Creating migration for ".$this->tables[$i]->name);
+                $output = $this->editor->make_command(array('base_dir' => $this->base_dir, 'php_dir' => $this->php_dir, 'project_name' => $this->project_name, 'type' => "migration", 'table' => $this->tables[$i]->name));
             }else{ //remove migration then create it
                 if (!unlink($file_dir.$filename))
                 {
@@ -1145,8 +1195,8 @@ class KreeController extends Controller
                 }
                 else
                 {
-                    array_push($this->output, "2. Creating migration for ".$this->tables[$i]);
-                    $output = $this->editor->make_command(array('base_dir' => $this->base_dir, 'php_dir' => $this->php_dir, 'project_name' => $this->project_name, 'type' => "migration", 'table' => $this->tables[$i]));                                    
+                    array_push($this->output, "2. Creating migration for ".$this->tables[$i]->name);
+                    $output = $this->editor->make_command(array('base_dir' => $this->base_dir, 'php_dir' => $this->php_dir, 'project_name' => $this->project_name, 'type' => "migration", 'table' => $this->tables[$i]->name));                                    
                 }                
             }
             echo "<h1>Output</h1><pre>";
@@ -1159,7 +1209,7 @@ class KreeController extends Controller
             print_r($this->output);
             echo "</pre>";            
             //Loops through each table column and insert it into migration
-            $this->edit_migration(array('table' => $this->tables[$i], 'filename' => $filename));
+            $this->edit_migration(array('table' => $this->tables[$i]->name, 'filename' => $filename));
         }
     }
 
@@ -1170,7 +1220,7 @@ class KreeController extends Controller
      */
     public function edit_migration($request)
     {
-        $data = $this->get_db_data($this->db_name);
+        $data = $this->get_db_data();
 
         //print_r($data);
 

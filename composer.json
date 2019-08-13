@@ -39,6 +39,13 @@
         "classmap": [
             "database/seeds",
             "database/factories"
+        ],
+        "files": [
+            "app/CustomClasses/RecursiveDOMIterator.php",
+            "app/CustomClasses/CodeBeautifier.php",
+            "app/CustomClasses/HtmlCodeEditor.php",
+            "app/CustomClasses/PhpCodeEditor.php",
+            "app/CustomClasses/KreeFilesystem.php"
         ]
     },
     "autoload-dev": {
