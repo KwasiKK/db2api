@@ -27,11 +27,11 @@
     //Loop through table columns that will show up in the table header and body
     for ($j=0; $j < count($data[$i]["columns"]); $j++) {
         //print_r($data[$i]["columns"][$j]);
-        if($data[$i]["columns"][$j]->{"Field"} !== "updated_at" AND $data[$i]["columns"][$j]->{"Field"} !== "created_at" AND strpos($data[$i]["columns"][$j]->{"Type"}, "int") == false AND $data[$i]["columns"][$j]->{"Key"} !== "PRI" ){ //Not Primary Keys
+        if($data[$i]["columns"][$j]["name"] !== "updated_at" AND $data[$i]["columns"][$j]["name"] !== "created_at" AND strpos($data[$i]["columns"][$j]["type"], "int") == false AND $data[$i]["columns"][$j]["key"] !== "PRI" ){ //Not Primary Keys
             //Add table column to view for table header              
-            array_push($table_header_code, "\t\t\t<td>".$data[$i]["columns"][$j]->{"Field"}."</td>\n");
+            array_push($table_header_code, "\t\t\t<td>".$data[$i]["columns"][$j]["name"]."</td>\n");
             //Add table column to view for table body  
-            array_push($table_body_code, "\t\t\t<td><?php echo \$value->".$data[$i]["columns"][$j]->{"Field"}."; ?></td>\n");
+            array_push($table_body_code, "\t\t\t<td><?php echo \$value->".$data[$i]["columns"][$j]["name"]."; ?></td>\n");
         }
     }
     $new_content = array_merge($new_content, $table_header_code);

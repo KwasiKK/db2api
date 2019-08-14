@@ -105,7 +105,7 @@ class KreeController extends Controller
         // Create project files
         $path = $this->base_dir.env("PROJECT_NAME", "krie")."\\storage\\originals\\original-5.8.17";
         $target =  $this->base_dir.$project->name;
-        $this->editor->copyDirectory($path, $target);
+        //$this->editor->copyDirectory($path, $target);
 
         $this->project_name = $project->name;
         $this->tables = [];
@@ -265,7 +265,7 @@ class KreeController extends Controller
         //For Each table in the selected db
         foreach ($this->tables as $key => $table) {
             //Select table attributes and comments
-            $columns = $table["columns"];//DB::connection("mysql2")->select("SHOW COLUMNS FROM ".$table->{"Tables_in_".$db_name}." FROM ".$db_name);
+            // $columns = $table["columns"];//DB::connection("mysql2")->select("SHOW COLUMNS FROM ".$table->{"Tables_in_".$db_name}." FROM ".$db_name);
 
             //This section select the Foreign key details for $table
             $fk_details = [];
@@ -273,8 +273,13 @@ class KreeController extends Controller
             // select("SELECT * FROM INFORMATION_SCHEMA.KEY_COLUMN_USAGE
             // WHERE REFERENCED_TABLE_SCHEMA = '".$db_name."' AND REFERENCED_TABLE_NAME = '".$table->{"Tables_in_".$db_name}."'");            
 
-            $data[$i]['name'] = $table->{"Tables_in_".$this->project_name};
-            $data[$i]['columns'] = $columns;
+            $data[$i]['name'] = $table["name"]; //$table->{"Tables_in_".$this->project_name};
+            $data[$i]['columns'] = json_decode($table["columns"], true);
+
+            foreach ($data[$i]['columns'] as $key2 => $column) {
+                $data[$i]['columns'][$key2]["key"] = "";
+            }
+
             $data[$i]['fk_details'] = $fk_details;
 
             $i++;
@@ -370,7 +375,8 @@ class KreeController extends Controller
         $file_dir = $this->base_dir.$this->project_name."\\resources\\views\\auth\\";
 
         //Make auth directory
-        $this->editor->makeDirectory($file_dir);        
+        if (!$this->editor->exists($file_dir))
+            $this->editor->makeDirectory($file_dir);        
         
         /**
          *  creating register view , which may include register form
@@ -381,7 +387,7 @@ class KreeController extends Controller
         /**
          *  write to register and add html and form builder
         */ 
-        include '../KreeViews/auth/register.kree.php';  
+        include dirname(__FILE__).'/KreeViews/auth/register.kree.php';
 
         $write_request = array(
             'file_url' => $file_dir.$filename,
@@ -402,7 +408,7 @@ class KreeController extends Controller
         /**
          *  write to login and add html and form builder
         */ 
-        include '../KreeViews/auth/login.kree.php';  
+        include dirname(__FILE__).'/KreeViews/auth/login.kree.php';  
 
         $write_request = array(
             'file_url' => $file_dir.$filename,
@@ -422,7 +428,7 @@ class KreeController extends Controller
         /**
          *  write to password and add html and form builder
         */ 
-        include '../KreeViews/auth/password.kree.php';  
+        include dirname(__FILE__).'/KreeViews/auth/password.kree.php';  
 
         $write_request = array(
             'file_url' => $file_dir.$filename,
@@ -442,7 +448,7 @@ class KreeController extends Controller
         /**
          *  write to reset and add html and form builder
         */ 
-        include '../KreeViews/auth/reset.kree.php';  
+        include dirname(__FILE__).'/KreeViews/auth/reset.kree.php';  
 
         $write_request = array(
             'file_url' => $file_dir.$filename,
@@ -538,7 +544,7 @@ class KreeController extends Controller
 
         array_push($this->output, "File Created: ".$filename);
 
-        $this->edit_route(array('table' => "routes.php", 'file_url' => $file_dir."routes.php"));
+        $this->edit_route(array('table' => "web.php", 'file_url' => $file_dir."web.php"));
 
         /**
          *  create table routes to the CRUD
@@ -552,7 +558,7 @@ class KreeController extends Controller
             $this->edit_route(array('table' => $this->tables[$i]->name, 'file_url' => $file_dir.$filename));
         }  
 
-        $this->edit_route(array('table' => "Last", 'file_url' => $file_dir."routes.php"));
+        $this->edit_route(array('table' => "Last", 'file_url' => $file_dir."web.php"));
     }
 
     /**
@@ -567,8 +573,8 @@ class KreeController extends Controller
         //print_r($data);
         //array_push($this->output, "</pre>";
 
-        if($request["table"] == "routes.php"){
-            include "../app/KreeViews/route.kree.php";
+        if($request["table"] == "web.php"){
+            include dirname(__FILE__)."/KreeViews/route.kree.php";
 
             $write_request = array(
                 'file_url' => $request["file_url"],
@@ -624,7 +630,7 @@ class KreeController extends Controller
          *  create main views, which may include Main file that has bootstraped Header and Footer
         */      
 
-        $file_dir = $this->base_dir.$this->project_name."/resources/views/";
+        $file_dir = $this->base_dir.$this->project_name."\\resources\\views\\";
 
         for ($i=0; $i < count($this->tables); $i++) {
             //creating model for table via php artisan make:model command
@@ -750,7 +756,7 @@ class KreeController extends Controller
          *  check to see if we need to create main file app.blade.php
         */
         if ($request["table"] == "app.blade.php") {
-            include "../app/KreeViews/app.kree.php";
+            include dirname(__FILE__)."/KreeViews/app.kree.php";
 
             $write_request = array(
                 'file_url' => $this->base_dir.$this->project_name."\\resources\\views\\app.blade.php",
@@ -769,7 +775,7 @@ class KreeController extends Controller
          *  check to see if we need to create main file app.blade.php
         */
         if ($request["table"] == "list.blade.php") {
-            include "../app/KreeViews/errors/list.kree.php";
+            include dirname(__FILE__)."/KreeViews/errors/list.kree.php";
 
             $write_request = array(
                 'file_url' => $this->base_dir.$this->project_name."\\resources\\views\\errors\\list.blade.php",
@@ -784,14 +790,22 @@ class KreeController extends Controller
             return;
         }                
 
+        echo "<h3 style='color: red;'>Edit view data:</h3>";
+
         for ($i=0; $i < count($data); $i++) {
+            echo "<br>++++++++++++++++++++++++++++++++++++++++++++++++++++<br>";
+            print_r($data[$i]);
+            echo "<br>>>>".$data[$i]["name"]."<br>";// ." == ". $request['table']."<<<";
+
             if($data[$i]["name"] == $request['table']){        
+                echo "<h3 style='color: yellow;'>IN IF:</h3>";
                 $table = $request['table'];
                 $tableInView = $table;
                 /**
                  *  write to index()
                 */  
-                include "../app/KreeViews/index.kree.php";    
+                include dirname(__FILE__)."/KreeViews/index.kree.php";    
+                echo "<br>Write to index: <br>";
 
                 $write_request = array(
                     'file_url' => $this->base_dir.$this->project_name."\\resources\\views\\".$table."\\index.blade.php",
@@ -800,13 +814,14 @@ class KreeController extends Controller
                     'line_number' => 0,
                     'write_options' => 'replace',
                     'table' => $request['table']
-                );                
+                );
+                print_r($write_request);
                 $this->editor->write($write_request);
 
                 /**
                  *  write to create()
                 */             
-                include "../app/KreeViews/create.kree.php";    
+                include dirname(__FILE__)."/KreeViews/create.kree.php";    
 
                 $write_request = array(
                     'file_url' => $this->base_dir.$this->project_name."\\resources\\views\\".$table."\\create.blade.php",
@@ -821,7 +836,7 @@ class KreeController extends Controller
                 /**
                  *  write to edit()
                 */              
-                include "../app/KreeViews/edit.kree.php";    
+                include dirname(__FILE__)."/KreeViews/edit.kree.php";    
 
                 $write_request = array(
                     'file_url' => $this->base_dir.$this->project_name."\\resources\\views\\".$table."\\edit.blade.php",
@@ -836,7 +851,7 @@ class KreeController extends Controller
                 /**
                  *  write to show()
                 */             
-                include "../app/KreeViews/show.kree.php";    
+                include dirname(__FILE__)."/KreeViews/show.kree.php";    
 
                 $write_request = array(
                     'file_url' => $this->base_dir.$this->project_name."\\resources\\views\\".$table."\\show.blade.php",
@@ -851,7 +866,7 @@ class KreeController extends Controller
                 /**
                  *  write to form partial
                 */             
-                include "../app/KreeViews/form.kree.php";    
+                include dirname(__FILE__)."/KreeViews/form.kree.php";    
 
                 $write_request = array(
                     'file_url' => $this->base_dir.$this->project_name."\\resources\\views\\".$table."\\form.blade.php",
@@ -925,7 +940,7 @@ class KreeController extends Controller
                 /**
                  *  add model and view service provider to controller
                 */
-                include "../app/KreeViews/controllers/dependencies.kree.php";
+                include dirname(__FILE__)."/KreeViews/controllers/dependencies.kree.php";
                 $write_request = array(
                     'file_url' => $this->base_dir.$this->project_name."\app\Http\Controllers\\".$request['filename'],
                     'remove_lines' => [],
@@ -935,15 +950,15 @@ class KreeController extends Controller
                     'table' => $table
                 );
 
-                echo "<pre>";
-                print_r($write_request);
-                echo "</pre>";
+                // echo "<pre>";
+                // print_r($write_request);
+                // echo "</pre>";
                 $this->editor->write($write_request);
 
                 /**
                  *  write to index()
                 */ 
-                include "../app/KreeViews/controllers/index.kree.php";
+                include dirname(__FILE__)."/KreeViews/controllers/index.kree.php";
 
                 $update_request = array(
                     'file_url' => $this->base_dir.$this->project_name."\app\Http\Controllers\\".$request['filename'],
@@ -958,7 +973,7 @@ class KreeController extends Controller
                 /**
                  *  write to create()
                 */              
-                include "../app/KreeViews/controllers/create.kree.php";
+                include dirname(__FILE__)."/KreeViews/controllers/create.kree.php";
 
                 $update_request = array(
                     'file_url' => $this->base_dir.$this->project_name."\app\Http\Controllers\\".$request['filename'],
@@ -973,7 +988,7 @@ class KreeController extends Controller
                 /**
                  *  write to store()
                 */              
-                include "../app/KreeViews/controllers/store.kree.php";
+                include dirname(__FILE__)."/KreeViews/controllers/store.kree.php";
 
                 $update_request = array(
                     'file_url' => $this->base_dir.$this->project_name."\app\Http\Controllers\\".$request['filename'],
@@ -988,7 +1003,7 @@ class KreeController extends Controller
                 /**
                  *  write to show()
                 */        
-                include "../app/KreeViews/controllers/show.kree.php";
+                include dirname(__FILE__)."/KreeViews/controllers/show.kree.php";
 
                 $update_request = array(
                     'file_url' => $this->base_dir.$this->project_name."\app\Http\Controllers\\".$request['filename'],
@@ -1003,7 +1018,7 @@ class KreeController extends Controller
                 /**
                  *  write to edit()
                 */ 
-                include "../app/KreeViews/controllers/edit.kree.php";             
+                include dirname(__FILE__)."/KreeViews/controllers/edit.kree.php";             
                 
                 $update_request = array(
                     'file_url' => $this->base_dir.$this->project_name."\app\Http\Controllers\\".$request['filename'],
@@ -1018,7 +1033,7 @@ class KreeController extends Controller
                 /**
                  *  write to update()
                 */  
-                include "../app/KreeViews/controllers/update.kree.php";            
+                include dirname(__FILE__)."/KreeViews/controllers/update.kree.php";            
 
                 $update_request = array(
                     'file_url' => $this->base_dir.$this->project_name."\app\Http\Controllers\\".$request['filename'],
@@ -1033,7 +1048,7 @@ class KreeController extends Controller
                 /**
                  *  write to destroy()
                 */   
-                include "../app/KreeViews/controllers/destroy.kree.php";           
+                include dirname(__FILE__)."/KreeViews/controllers/destroy.kree.php";           
 
                 $update_request = array(
                     'file_url' => $this->base_dir.$this->project_name."\app\Http\Controllers\\".$request['filename'],
@@ -1109,8 +1124,8 @@ class KreeController extends Controller
                 array_push($new_content, "\tprotected \$fillable = [ \n");
                 for ($j=0; $j < count($data[$i]["columns"]); $j++) {
                     //print_r($data[$i]["columns"][$j]);
-                    if(strpos($data[$i]["columns"][$j]->{"Type"}, "int") == false AND $data[$i]["columns"][$j]->{"Key"} !== "PRI" ){ //Not Primary Keys
-                        array_push($new_content, "          '".$data[$i]["columns"][$j]->{"Field"}."'".($j != count($data[$i]["columns"]) -1 ? "," : "")." \n");
+                    if(strpos($data[$i]["columns"][$j]["type"], "int") == false AND isset($data[$i]["columns"][$j]["key"]) AND $data[$i]["columns"][$j]["key"] !== "PRI" ){ //Not Primary Keys
+                        array_push($new_content, "          '".$data[$i]["columns"][$j]["name"]."'".($j != count($data[$i]["columns"]) -1 ? "," : "")." \n");
                     }
                 }
                 array_push($new_content, "      ]; \n");
@@ -1187,6 +1202,7 @@ class KreeController extends Controller
             if(!$result){ //if migration does not exist, create it
                 array_push($this->output, "1. Creating migration for ".$this->tables[$i]->name);
                 $output = $this->editor->make_command(array('base_dir' => $this->base_dir, 'php_dir' => $this->php_dir, 'project_name' => $this->project_name, 'type' => "migration", 'table' => $this->tables[$i]->name));
+
             }else{ //remove migration then create it
                 if (!unlink($file_dir.$filename))
                 {
@@ -1199,17 +1215,17 @@ class KreeController extends Controller
                     $output = $this->editor->make_command(array('base_dir' => $this->base_dir, 'php_dir' => $this->php_dir, 'project_name' => $this->project_name, 'type' => "migration", 'table' => $this->tables[$i]->name));                                    
                 }                
             }
-            echo "<h1>Output</h1><pre>";
-            print_r($output);
-            echo "</pre>"; 
+            // echo "<h1>Output</h1><pre>";
+            // print_r($output);
+            // echo "</pre>"; 
 
             array_push($this->output, "File Created: ".$filename);
             
-            echo "<pre>";
-            print_r($this->output);
-            echo "</pre>";            
-            //Loops through each table column and insert it into migration
-            $this->edit_migration(array('table' => $this->tables[$i]->name, 'filename' => $filename));
+            // echo "<pre>";
+            // print_r($this->output);
+            // echo "</pre>";            
+            // //Loops through each table column and insert it into migration
+            //$this->edit_migration(array('table' => $this->tables[$i]->name, 'filename' => $filename));
         }
     }
 
@@ -1222,7 +1238,7 @@ class KreeController extends Controller
     {
         $data = $this->get_db_data();
 
-        //print_r($data);
+        print_r($data);
 
         for ($i=0; $i < count($data); $i++) {
             if($data[$i]["name"] == $request['table']){
@@ -1230,7 +1246,9 @@ class KreeController extends Controller
 
                 $new_content = array();
                 for ($j=0; $j < count($data[$i]["columns"]); $j++) {
-                    //print_r($data[$i]["columns"][$j]);
+                    echo "<br>========-=-=-=-==================-=-=-=-==================-=-=-=-==========<br>";
+                    print_r($data[$i]["columns"][$j]);
+                    echo "<br>========-=-=-=-==================-=-=-=-==================-=-=-=-==========<br>";
                     $new_content[$j] = $this->get_column_migration($data[$i]["columns"][$j]);
                 }
 
@@ -1242,9 +1260,9 @@ class KreeController extends Controller
                     'write_options' => 'index'
                 );                
 
-                echo "<pre>";
-                print_r($write_request);
-                echo "</pre>";
+                // echo "<pre>";
+                // print_r($write_request);
+                // echo "</pre>";
                 $this->editor->write($write_request);
                 
                 return;
@@ -1263,28 +1281,31 @@ class KreeController extends Controller
         $default = "";
         $result = "";
 
-        if($column->{"Null"} == "YES"){
+        echo "<h4 style='color: green;'>column column:</h4>";
+        print_r($column);
+
+        // if($column->{"Null"} == "YES"){
             $nullable = "->nullable()";
-        }
-        if(!($column->{"Default"} == null)){
-            $default = "->default(".$column->{"Default"}.")";
-        }        
+        // }
+        // if(!($column->{"Default"} == null)){
+            $default = "->default(null)";
+        //}        
 
-        if(strpos($column->{"Type"}, "int") !== false AND $column->{"Key"} == "PRI" ){ //Primary Keys
-            $result = "\$table->increments('".$column->{"Field"}."')".$nullable.$default.";";
+        if(strpos(strtolower($column["type"]), "int") !== false AND $column["key"] == "PRI" ){ //Primary Keys
+            $result = "\$table->increments('".$column["name"]."')".$nullable.$default.";";
 
-        }else if(strpos($column->{"Type"}, "int") !== false AND $column->{"Key"} == "MUL"){ //Int Index
-            $result = "\$table->integer('".$column->{"Field"}."')".$nullable.$default."->index();";
+        }else if(strpos(strtolower($column["type"]), "int") !== false AND $column["key"] == "MUL"){ //Int Index
+            $result = "\$table->integer('".$column["name"]."')".$nullable.$default."->index();";
 
-        }else if(strpos($column->{"Type"}, "int") !== false AND $column->{"Key"} == ""){ //Normal Interger
-            $result = "\$table->integer('".$column->{"Field"}."')".$nullable.$default.";";
+        }else if(strpos(strtolower($column["type"]), "int") !== false AND $column["key"] == ""){ //Normal Interger
+            $result = "\$table->integer('".$column["name"]."')".$nullable.$default.";";
 
-        }else if(strpos($column->{"Type"}, "date") !== false){ //DATE equivalent for the database.
-            $result = "\$table->date('".$column->{"Field"}."')".$nullable.$default.";";
+        }else if(strpos(strtolower($column["type"]), "date") !== false){ //DATE equivalent for the database.
+            $result = "\$table->date('".$column["name"]."')".$nullable.$default.";";
 
-        }else if(strpos($column->{"Type"}, "varchar") !== false){ //varchar with size
-            $varcharlen = rtrim(substr($column->{"Type"}, 8), ")");
-            $result = "\$table->string('".$column->{"Field"}."', ".$varcharlen.")".$nullable.$default.";";
+        }else if(strpos(strtolower($column["type"]), "varchar") !== false){ //varchar with size
+            $varcharlen = rtrim(substr(strtolower($column["type"]), 8), ")");
+            $result = "\$table->string('".$column["name"]."', ".$varcharlen.")".$nullable.$default.";";
         }
 
         return "            ".$result."\n";

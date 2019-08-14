@@ -8,21 +8,21 @@
     //Loop through table columns that will show up on the form and add them to $rules array
     for ($j=0; $j < count($data[$i]["columns"]); $j++) {
         //print_r($data[$i]["columns"][$j]);
-        if($data[$i]["columns"][$j]->{"Field"} !== "updated_at" AND $data[$i]["columns"][$j]->{"Field"} !== "created_at" AND strpos($data[$i]["columns"][$j]->{"Type"}, "int") == false AND $data[$i]["columns"][$j]->{"Key"} !== "PRI" ){ //Not Primary Keys
+        if($data[$i]["columns"][$j]["name"] !== "updated_at" AND $data[$i]["columns"][$j]["name"] !== "created_at" AND strpos($data[$i]["columns"][$j]["type"], "int") == false AND $data[$i]["columns"][$j]["key"] !== "PRI" ){ //Not Primary Keys
             $column_rules = "required";
             //Add more rules === 2B Done
 
             //Add email rules
-            if($data[$i]["columns"][$j]->{"Field"} == "email"){
+            if($data[$i]["columns"][$j]["name"] == "email"){
                 $column_rules .= "|email";
             }
 
             //Add number rules
-            if(strpos($data[$i]["columns"][$j]->{"Type"}, "int") == true){
+            if(strpos($data[$i]["columns"][$j]["type"], "int") == true){
                 $column_rules .= "|numeric";
             }                        
-            array_push($store_fields, "\t\t\t$".$table."->".$data[$i]["columns"][$j]->{"Field"}." = Input::get('".$data[$i]["columns"][$j]->{"Field"}."');\n");
-            array_push($new_content, "\t\t\t'".$data[$i]["columns"][$j]->{"Field"}."' => '".$column_rules."'".($j != count($data[$i]["columns"]) -1 ? "," : "")." \n");
+            array_push($store_fields, "\t\t\t$".$table."->".$data[$i]["columns"][$j]["name"]." = Input::get('".$data[$i]["columns"][$j]["name"]."');\n");
+            array_push($new_content, "\t\t\t'".$data[$i]["columns"][$j]["name"]."' => '".$column_rules."'".($j != count($data[$i]["columns"]) -1 ? "," : "")." \n");
         }
     }
     array_push($new_content, "\t\t); \n");

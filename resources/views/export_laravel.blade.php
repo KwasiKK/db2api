@@ -17,8 +17,6 @@
                         {{ Session::get('message') }}
                     </div>
                 @endif
-                <div class="feedback">
-                </div> 
                 <div class="output"></div>                                              
             </div>            
             <!-- /.col-lg-12 -->
@@ -71,6 +69,8 @@
 	            <img src="/img/loading.gif" class="loading-img">
 			</div>
 		</div>
+        <div class="row feedback">
+        </div> 
     </div>
     <input type="hidden" class="project_id" value="{{ $project->id }}">
 @stop
