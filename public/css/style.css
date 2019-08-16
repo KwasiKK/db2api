@@ -144,7 +144,7 @@ ul, ol {
 }
 
 .bg-dark {
-    background-color: #1C1D21;
+    background-color: #000000;
 }
 
 
@@ -169,7 +169,7 @@ ul, ol {
     right: 0;
     bottom: 0;
     opacity: .8;
-    background: #1C1D21;
+    background: rgba(28, 29, 33, 0.78);
 }
 
 
@@ -581,7 +581,7 @@ input[type="text"]:focus, input[type="email"]:focus, input[type="password"]:focu
 
 header {
     position: relative;
-    background: #1c1d21;
+    background: #000000;
 }
 
 .header-transparent {

@@ -4,7 +4,7 @@
     <!-- home wrapper -->
     <div class="home-wrapper">
         <!-- Background Image -->
-        <div class="bg-img" style="background-image: url('./img/background1.jpg');">
+        <div class="bg-img" style="background-image: url('./img/bg1.png');">
             <div class="overlay"></div>
         </div>
         <!-- /Background Image -->

@@ -8,12 +8,18 @@
     <!-- The above 3 meta tags *must* come first in the head; any other head content must come *after* these tags -->
     <!-- Tell the browser to be responsive to screen width -->
     <meta content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" name="viewport">
-    <meta name="description" content="Assigned Developer should fill this in">
+    <meta name="description" content="Laravel API builde, create Laravel applications from a database design.">
     <meta name="author" content="Kabelo Kwasi Kgwete">
     <!-- CSRF Token -->
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
     <title>{{ config('app.name', 'DB-2->API') }}</title>
+
+        <!-- Favicons -->
+    <link href="{{ asset('/img/icon.png') }}" rel="shortcut icon">
+    <link href="{{ asset('/img/icon.png') }}" rel="apple-touch-icon">
+    <link href="{{ asset('/img/icon.png') }}" rel="apple-touch-icon" sizes="72x72">
+    <link href="{{ asset('/img/icon.png') }}" rel="apple-touch-icon" sizes="114x114">
 
     <!-- Google font -->
     <link href="https://fonts.googleapis.com/css?family=Montserrat:400,700%7CVarela+Round" rel="stylesheet">
@@ -159,19 +165,19 @@
                     <!-- /footer logo -->
 
                     <!-- footer follow -->
-                    <ul class="footer-follow">
+                    <!-- <ul class="footer-follow">
                         <li><a href="#"><i class="fa fa-facebook"></i></a></li>
                         <li><a href="#"><i class="fa fa-twitter"></i></a></li>
                         <li><a href="#"><i class="fa fa-google-plus"></i></a></li>
                         <li><a href="#"><i class="fa fa-instagram"></i></a></li>
                         <li><a href="#"><i class="fa fa-linkedin"></i></a></li>
                         <li><a href="#"><i class="fa fa-youtube"></i></a></li>
-                    </ul>
+                    </ul> -->
                     <!-- /footer follow -->
 
                     <!-- footer copyright -->
                     <div class="footer-copyright">
-                        <p>Copyright © 2017. All Rights Reserved. Designed by <a href="https://colorlib.com" target="_blank">Colorlib</a></p>
+                        <p>Copyright © 2019. All Rights Reserved. Created by <a href="#" target="_blank">Kwasi Kgwete</a></p>
                     </div>
                     <!-- /footer copyright -->
 
