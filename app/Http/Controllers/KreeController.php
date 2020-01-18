@@ -16,6 +16,7 @@ use Response;
 use Redirect;
 use DB;
 use Auth;
+use Zipper;
 use Session;
 use App\Table;
 use App\Project;
@@ -105,7 +106,7 @@ class KreeController extends Controller
         // Create project files
         $path = $this->base_dir.env("PROJECT_NAME", "krie")."\\storage\\originals\\original-5.8.17";
         $target =  $this->base_dir.$project->name;
-        //$this->editor->copyDirectory($path, $target);
+        $this->editor->copyDirectory($path, $target);
 
         $this->project_name = $project->name;
         $this->tables = [];
@@ -133,7 +134,30 @@ class KreeController extends Controller
         }
         //$this->create_dependencies();
 
-        return $this->output;
+        return Response::json(array('success' => true, 'message' => $project->name." files are created."), 200);
+    }
+
+    /**
+     * Create project zip.
+     *
+     * @return Response
+     */
+    public function download_project($id)
+    {
+        $project = Project::join('templates', 'projects.template_id', '=', 'templates.id')
+        ->select("projects.*", "templates.screenshot_url", "templates.category")
+        ->where("projects.user_id", "=", Auth::user()->id)
+        ->where("projects.id", "=", $id)->first();
+
+        $zip_file = $project->project_name.'.zip';
+
+        $path = $this->base_dir.$project->name;
+
+        $files = glob($path);
+
+        Zipper::make(public_path('test.zip'))->add($files)->close();
+
+        return response()->download(public_path('test.zip'), $project->name . ".zip");
     }
 
     /**
@@ -570,7 +594,7 @@ class KreeController extends Controller
     {
         $data = $this->get_db_data();
         //array_push($this->output, "<pre>";
-        //print_r($data);
+        //// print_r($data);
         //array_push($this->output, "</pre>";
 
         if($request["table"] == "web.php"){
@@ -749,7 +773,7 @@ class KreeController extends Controller
     {
         $data = $this->get_db_data();
         //array_push($this->output, "<pre>";
-        //print_r($data);
+        //// print_r($data);
         //array_push($this->output, "</pre>";
 
         /**
@@ -790,22 +814,22 @@ class KreeController extends Controller
             return;
         }                
 
-        echo "<h3 style='color: red;'>Edit view data:</h3>";
+        // echo "<h3 style='color: red;'>Edit view data:</h3>";
 
         for ($i=0; $i < count($data); $i++) {
-            echo "<br>++++++++++++++++++++++++++++++++++++++++++++++++++++<br>";
-            print_r($data[$i]);
-            echo "<br>>>>".$data[$i]["name"]."<br>";// ." == ". $request['table']."<<<";
+            // echo "<br>++++++++++++++++++++++++++++++++++++++++++++++++++++<br>";
+            // print_r($data[$i]);
+            // echo "<br>>>>".$data[$i]["name"]."<br>";// ." == ". $request['table']."<<<";
 
             if($data[$i]["name"] == $request['table']){        
-                echo "<h3 style='color: yellow;'>IN IF:</h3>";
+                // echo "<h3 style='color: yellow;'>IN IF:</h3>";
                 $table = $request['table'];
                 $tableInView = $table;
                 /**
                  *  write to index()
                 */  
                 include dirname(__FILE__)."/KreeViews/index.kree.php";    
-                echo "<br>Write to index: <br>";
+                // echo "<br>Write to index: <br>";
 
                 $write_request = array(
                     'file_url' => $this->base_dir.$this->project_name."\\resources\\views\\".$table."\\index.blade.php",
@@ -815,7 +839,7 @@ class KreeController extends Controller
                     'write_options' => 'replace',
                     'table' => $request['table']
                 );
-                print_r($write_request);
+                // print_r($write_request);
                 $this->editor->write($write_request);
 
                 /**
@@ -935,7 +959,7 @@ class KreeController extends Controller
             if($data[$i]["name"] == $request['table']){        
                 $table = $request['table'];
                 $project = $this->project_name;
-                //echo "getcwd: ".getcwd();
+                //// echo "getcwd: ".getcwd();
 
                 /**
                  *  add model and view service provider to controller
@@ -950,9 +974,9 @@ class KreeController extends Controller
                     'table' => $table
                 );
 
-                // echo "<pre>";
-                // print_r($write_request);
-                // echo "</pre>";
+                // // echo "<pre>";
+                // // print_r($write_request);
+                // // echo "</pre>";
                 $this->editor->write($write_request);
 
                 /**
@@ -1115,7 +1139,7 @@ class KreeController extends Controller
     {
         $data = $this->get_db_data();
 
-        //print_r($data);
+        //// print_r($data);
 
         for ($i=0; $i < count($data); $i++) {
             if($data[$i]["name"] == $request['table']){
@@ -1123,7 +1147,7 @@ class KreeController extends Controller
                 array_push($new_content, "\tpublic \$table = '".$request['table']."'; \n");
                 array_push($new_content, "\tprotected \$fillable = [ \n");
                 for ($j=0; $j < count($data[$i]["columns"]); $j++) {
-                    //print_r($data[$i]["columns"][$j]);
+                    //// print_r($data[$i]["columns"][$j]);
                     if(strpos($data[$i]["columns"][$j]["type"], "int") == false AND isset($data[$i]["columns"][$j]["key"]) AND $data[$i]["columns"][$j]["key"] !== "PRI" ){ //Not Primary Keys
                         array_push($new_content, "          '".$data[$i]["columns"][$j]["name"]."'".($j != count($data[$i]["columns"]) -1 ? "," : "")." \n");
                     }
@@ -1215,15 +1239,15 @@ class KreeController extends Controller
                     $output = $this->editor->make_command(array('base_dir' => $this->base_dir, 'php_dir' => $this->php_dir, 'project_name' => $this->project_name, 'type' => "migration", 'table' => $this->tables[$i]->name));                                    
                 }                
             }
-            // echo "<h1>Output</h1><pre>";
-            // print_r($output);
-            // echo "</pre>"; 
+            // // echo "<h1>Output</h1><pre>";
+            // // print_r($output);
+            // // echo "</pre>"; 
 
             array_push($this->output, "File Created: ".$filename);
             
-            // echo "<pre>";
-            // print_r($this->output);
-            // echo "</pre>";            
+            // // echo "<pre>";
+            // // print_r($this->output);
+            // // echo "</pre>";            
             // //Loops through each table column and insert it into migration
             //$this->edit_migration(array('table' => $this->tables[$i]->name, 'filename' => $filename));
         }
@@ -1238,7 +1262,7 @@ class KreeController extends Controller
     {
         $data = $this->get_db_data();
 
-        print_r($data);
+        // print_r($data);
 
         for ($i=0; $i < count($data); $i++) {
             if($data[$i]["name"] == $request['table']){
@@ -1246,9 +1270,9 @@ class KreeController extends Controller
 
                 $new_content = array();
                 for ($j=0; $j < count($data[$i]["columns"]); $j++) {
-                    echo "<br>========-=-=-=-==================-=-=-=-==================-=-=-=-==========<br>";
-                    print_r($data[$i]["columns"][$j]);
-                    echo "<br>========-=-=-=-==================-=-=-=-==================-=-=-=-==========<br>";
+                    // echo "<br>========-=-=-=-==================-=-=-=-==================-=-=-=-==========<br>";
+                    // print_r($data[$i]["columns"][$j]);
+                    // echo "<br>========-=-=-=-==================-=-=-=-==================-=-=-=-==========<br>";
                     $new_content[$j] = $this->get_column_migration($data[$i]["columns"][$j]);
                 }
 
@@ -1260,9 +1284,9 @@ class KreeController extends Controller
                     'write_options' => 'index'
                 );                
 
-                // echo "<pre>";
-                // print_r($write_request);
-                // echo "</pre>";
+                // // echo "<pre>";
+                // // print_r($write_request);
+                // // echo "</pre>";
                 $this->editor->write($write_request);
                 
                 return;
@@ -1281,8 +1305,8 @@ class KreeController extends Controller
         $default = "";
         $result = "";
 
-        echo "<h4 style='color: green;'>column column:</h4>";
-        print_r($column);
+        // echo "<h4 style='color: green;'>column column:</h4>";
+        // print_r($column);
 
         // if($column->{"Null"} == "YES"){
             $nullable = "->nullable()";

@@ -61,8 +61,10 @@
 @section('scripts')
 <script type="text/javascript" src="/js/tableManager.js"></script>
 <script type="text/javascript">
+$(document).ready(function() {
     var columns = JSON.parse($("input[name=columns]").val());
     console.log('$(".create-table-rows")', $(".create-table-rows"));
     renderTable(columns, $(".create-table-rows"));
+});
 </script>
 @stop

@@ -3,7 +3,7 @@
     <div class="container">
         <div class="row">
             <div class="col-lg-12">
-                <h1 class="page-header">Exporting {{ $project->name }} tables
+                <h1 class="page-header">Exporting {{ strstr($project->name, "__", true) }} tables
                     <a href="/new_project" type="button" class="btn btn-default pull-right" >
                         <span class="glyphicon glyphicon-eye-open"></span> View Project
                     </a>

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use DB;
+use Str;
 use Auth;
 use Request;
 use Session;
@@ -42,7 +43,7 @@ class ProjectController extends Controller
         $input = Request::all();
         
         $project = new Project;
-        $project->name = $input["project_name"];
+        $project->name = strtolower(str_replace(" ", "_", $input["project_name"])) . "__" . Str::random(5);
         $project->user_id = Auth::user()->id;
         $project->template_id = 1;
 

@@ -47,3 +47,7 @@
 img.logo-alt {
     border-radius: 20px;
 }
+
+.row.createProject {
+    margin-bottom: 200px;
+}

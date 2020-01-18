@@ -3,7 +3,7 @@
     <div class="container">
         <div class="row">
             <div class="col-lg-12">
-                <h1 class="page-header">{{ $project->name }} tables
+                <h1 class="page-header">{{ strstr($project->name, "__", true) }} tables
                     <a href="/export/laravel/{{ $project->id }}" type="button" class="btn btn-success pull-right" >
                         <span class="glyphicon glyphicon-export"></span> Export Laravel Project
                     </a>

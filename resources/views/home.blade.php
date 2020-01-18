@@ -35,7 +35,7 @@
                     @foreach($projects as $key => $project)
                        <tr>
                             <td>{{ $key + 1 }}</td>
-                            <td>{{ $project->name }}</td>
+                            <td>{{ strstr($project->name, "__", true) }}</td>
                             <!-- <td>{{ count($project->name) }}</td> -->
                             <td>
                                 <a href="/project/view/{{ $project->id }}" class="btn btn-default btn-xs">View</a>

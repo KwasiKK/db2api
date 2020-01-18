@@ -21,18 +21,23 @@ $(document).ready(function() {
             method: "POST",
             success: function(response){
                 console.log({response});
+                if (response.success) {
+		            $(".feedback").html(`<div class='alert alert-success alert-dismissable'>
+		                    <button type='button' class='close' data-dismiss='alert' aria-hidden='true'>&times;</button>
+		                    The laravel project files are created. You can copy the routes, models, views, migrations, controllers, authentication files to your existing laravel project.
+		                </div>`);
 
-                // if (response.success) {
-                //     window.location.reload();
-                // }
-                // else {
-                //     $(".feedback").html(`<div class='alert alert-danger alert-dismissable'>
-                //             <button type='button' class='close' data-dismiss='alert' aria-hidden='true'>&times;</button>
-                //             Error occured while ` + action + ` the table.
-                //             Details:
-                //             <pre>` + response.output + `</pre>
-                //         </div>`);
-                // }
+                    window.open("/download/project/" + $('input.project_id').val(), '_blank');
+                    console.log("download/project");
+                }
+                else {
+                    $(".feedback").html(`<div class='alert alert-danger alert-dismissable'>
+                            <button type='button' class='close' data-dismiss='alert' aria-hidden='true'>&times;</button>
+                            Error occured while the table.
+                            Details:
+                            <pre>` + response + `</pre>
+                        </div>`);
+                }
             },
         }).done(function(data) {
             console.log(data);

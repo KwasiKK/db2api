@@ -189,6 +189,8 @@ return [
         App\Providers\EventServiceProvider::class,
         App\Providers\RouteServiceProvider::class,
 
+        Chumper\Zipper\ZipperServiceProvider::class,
+
     ],
 
     /*
@@ -243,6 +245,7 @@ return [
         'Html' => Collective\Html\HtmlFacade::class,
         'Filesystem' => Illuminate\Filesystem\Filesystem::class,
         'Htmldom' => Yangqi\Htmldom\Htmldom::class,
+        'Zipper' => Chumper\Zipper\Zipper::class,
     ],
 
 ];
